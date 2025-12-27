@@ -1,20 +1,8 @@
 // src/components/ResultsView.jsx
 import { ArrowLeft, TrendingUp, CheckCircle, ShoppingBag } from 'lucide-react';
 
-export default function ResultsView({ onReset, scannedImage }) {
-    // Mock Data
-    const data = {
-        name: "Sony WH-1000XM5 Noise Canceling Headphones",
-        category: "Electronics / Audio",
-        onlineAvg: 24900,
-        recPrice: 26500,
-        confidence: "High",
-        competitors: [
-            { name: "Amazon India", price: 24990, logo: "A" },
-            { name: "Flipkart", price: 25499, logo: "F" },
-            { name: "Croma Retail", price: 26900, logo: "C" },
-        ]
-    };
+export default function ResultsView({ onReset, scannedImage, data }) {
+    if (!data) return null;
 
     return (
         // ADDED 'mt-8' HERE FOR SPACING AFTER HEADER
@@ -120,7 +108,7 @@ export default function ResultsView({ onReset, scannedImage }) {
                                         </div>
                                         <span className="font-semibold text-heading text-sm">{item.name}</span>
                                     </div>
-                                    <span className="font-mono text-heading font-medium">₹{item.price.toLocaleString()}</span>
+                                    <span className="font-mono text-heading font-medium">{item.price.toLocaleString()}</span>
                                 </div>
                             ))}
                         </div>

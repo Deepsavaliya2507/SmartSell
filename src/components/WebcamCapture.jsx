@@ -1,4 +1,3 @@
-// src/components/WebcamCapture.jsx
 import React, { useRef, useCallback } from 'react';
 import Webcam from 'react-webcam';
 import { Camera, X } from 'lucide-react';
@@ -13,7 +12,6 @@ export default function WebcamCapture({ onCapture, onClose }) {
 
     return (
         <div className="relative w-full h-full bg-black rounded-xl overflow-hidden flex flex-col items-center justify-center">
-            {/* The Live Feed */}
             <Webcam
                 audio={false}
                 ref={webcamRef}
@@ -22,7 +20,6 @@ export default function WebcamCapture({ onCapture, onClose }) {
                 videoConstraints={{ facingMode: "environment" }}
             />
 
-            {/* Overlay UI */}
             <button
                 onClick={onClose}
                 className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition"
@@ -30,7 +27,6 @@ export default function WebcamCapture({ onCapture, onClose }) {
                 <X className="w-5 h-5" />
             </button>
 
-            {/* Capture Trigger */}
             <div className="absolute bottom-6 w-full flex justify-center">
                 <button
                     onClick={capture}
