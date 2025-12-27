@@ -32,7 +32,7 @@ export default function Dashboard({ onStoreSettings, storeConfig }) { // Accept 
             // Strip the "data:image/jpeg;base64," part
             const base64Data = imageFileBase64.split(',')[1] || imageFileBase64;
 
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
 
             // 2. The Smart Prompt
             // We ask Gemini to act as the scanner AND the pricer.
