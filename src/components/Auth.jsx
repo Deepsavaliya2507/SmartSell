@@ -1,55 +1,78 @@
 // src/components/Auth.jsx
 import { useState } from 'react';
 import { Mail, Lock, User, ArrowRight, CheckCircle, ArrowLeft } from 'lucide-react';
+import { auth, db } from '../firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 
 export default function Auth({ onLogin }) {
-    const [view, setView] = useState('login'); // 'login' | 'register' | 'otp'
+    const [view, setView] = useState('login'); // 'login' | 'register'
     const [isLoading, setIsLoading] = useState(false);
 
     // Data States
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    const [otp, setOtp] = useState(['', '', '', '']);
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
 
-    // Handle OTP Input Logic
-    const handleOtpChange = (element, index) => {
-        if (isNaN(element.value)) return false;
+    const handleSignIn = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setError('');
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
 
-        setOtp([...otp.map((d, idx) => (idx === index ? element.value : d))]);
+            // Fetch User Details from Firestore
+            const userDocRef = doc(db, "users", user.uid);
+            const userDoc = await getDoc(userDocRef);
 
-        // Focus next input automatically
-        if (element.nextSibling && element.value !== "") {
-            element.nextSibling.focus();
+            let userName = "User";
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                userName = userData.name || "User";
+
+                // Update last login
+                try {
+                    await updateDoc(userDocRef, {
+                        lastLogin: new Date().toISOString()
+                    });
+                } catch (updateErr) {
+                    console.error("Failed to update last login", updateErr);
+                }
+            }
+
+            onLogin({ name: userName, email: user.email, uid: user.uid });
+        } catch (err) {
+            console.error(err);
+            setError("Failed to sign in. Please check your credentials.");
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleSignIn = (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
-            // Use saved name if available, otherwise default
-            onLogin({ name: "Demo User", email: email || "user@example.com" });
-        }, 1500);
-    };
+        setError('');
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
 
-    const handleRegister = (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
-            setView('otp'); // Switch to OTP view
-        }, 1000);
-    };
+            // Store user data in Firestore
+            await setDoc(doc(db, "users", user.uid), {
+                name: name,
+                email: email,
+                createdAt: new Date().toISOString()
+            });
 
-    const handleVerifyOtp = (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setTimeout(() => {
+            onLogin({ name: name, email: email, uid: user.uid });
+        } catch (err) {
+            console.error(err);
+            setError(err.message || "Failed to create account.");
+        } finally {
             setIsLoading(false);
-            // Register with the actual name typed
-            onLogin({ name: name, email: email });
-        }, 1500);
+        }
     };
 
     return (
@@ -72,6 +95,11 @@ export default function Auth({ onLogin }) {
                 </div>
 
                 <div className="p-8">
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm text-center">
+                            {error}
+                        </div>
+                    )}
 
                     {/* --- VIEW 1: LOGIN --- */}
                     {view === 'login' && (
@@ -97,6 +125,8 @@ export default function Auth({ onLogin }) {
                                         type="password"
                                         placeholder="Password"
                                         className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#000080] focus:ring-1 focus:ring-[#000080] transition-all text-gray-900"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
                                         required
                                     />
                                 </div>
@@ -168,6 +198,8 @@ export default function Auth({ onLogin }) {
                                         type="password"
                                         placeholder="Create Password"
                                         className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#000080] transition-all text-gray-900"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
                                         required
                                     />
                                 </div>
@@ -178,52 +210,6 @@ export default function Auth({ onLogin }) {
                                 className="w-full bg-[#000080] text-white py-3.5 rounded-xl font-bold hover:opacity-90 transition shadow-lg mt-8"
                             >
                                 {isLoading ? 'Processing...' : 'Continue'}
-                            </button>
-                        </form>
-                    )}
-
-                    {/* --- VIEW 3: OTP CONFIRMATION (FIXED VISIBILITY) --- */}
-                    {view === 'otp' && (
-                        <form onSubmit={handleVerifyOtp} className="animate-fade-in text-center">
-                            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Mail className="w-6 h-6 text-green-600" />
-                            </div>
-
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Check your inbox</h2>
-                            <p className="text-gray-500 text-sm mb-8">
-                                We sent a 4-digit confirmation code to <br />
-                                <span className="font-bold text-gray-900">{email || 'your email'}</span>
-                            </p>
-
-                            {/* FIXED: VISIBLE BORDERS AND COLORS */}
-                            <div className="flex justify-center gap-3 mb-8">
-                                {otp.map((data, index) => (
-                                    <input
-                                        key={index}
-                                        type="text"
-                                        maxLength="1"
-                                        className="w-14 h-14 border-2 border-gray-300 rounded-xl text-center text-2xl font-bold text-gray-900 bg-white outline-none focus:border-[#000080] focus:ring-4 focus:ring-blue-500/10 transition-all"
-                                        value={data}
-                                        onChange={e => handleOtpChange(e.target, index)}
-                                        onFocus={e => e.target.select()}
-                                    />
-                                ))}
-                            </div>
-
-                            <button
-                                disabled={isLoading}
-                                className="w-full bg-[#000080] text-white py-3.5 rounded-xl font-bold hover:opacity-90 transition shadow-lg flex items-center justify-center gap-2"
-                            >
-                                {isLoading ? 'Verifying...' : 'Verify & Access'}
-                                {!isLoading && <CheckCircle className="w-4 h-4" />}
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => setOtp(['', '', '', ''])}
-                                className="mt-6 text-sm text-gray-500 hover:text-[#000080] font-medium"
-                            >
-                                Resend Code
                             </button>
                         </form>
                     )}

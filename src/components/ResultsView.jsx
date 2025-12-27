@@ -108,7 +108,7 @@ export default function ResultsView({ onReset, scannedImage, data }) {
                                         </div>
                                         <span className="font-semibold text-heading text-sm">{item.name}</span>
                                     </div>
-                                    <span className="font-mono text-heading font-medium">{item.price.toLocaleString()}</span>
+                                    <span className="font-mono text-heading font-medium">{item.price}</span>
                                 </div>
                             ))}
                         </div>
