@@ -12,6 +12,12 @@ function App() {
   const [activeModal, setActiveModal] = useState(null); // 'settings', 'help', 'store-settings', null
   const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Prevent flash of login page
 
+  const [storeConfig, setStoreConfig] = useState({
+    shopName: "My Retail Store",
+    margin: 15,
+    location: "Mumbai, India"
+  });
+
   // Load user from localStorage on mount
   useEffect(() => {
     const checkAuth = async () => {
@@ -26,7 +32,7 @@ function App() {
       }
 
       // Minimum loading time for smooth UX
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 500));
       setIsCheckingAuth(false);
     };
 
@@ -75,33 +81,61 @@ function App() {
         onClose={() => setActiveModal(null)}
       >
         <div className="space-y-5">
-          {/* Shop Name */}
+
+          {/* Shop Name Input */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-subtext uppercase">Shop Name</label>
             <div className="relative">
               <Store className="absolute left-3 top-3 w-5 h-5 text-subtext" />
-              <input type="text" defaultValue="My Retail Store" className="w-full pl-10 pr-4 py-2.5 bg-bg border border-ui/10 rounded-lg outline-none focus:border-accent text-sm font-medium" />
+              {/* === CHANGE THIS INPUT === */}
+              <input
+                type="text"
+                value={storeConfig.shopName}
+                onChange={(e) => setStoreConfig({ ...storeConfig, shopName: e.target.value })}
+                className="w-full pl-10 pr-4 py-2.5 bg-bg border border-ui/10 rounded-lg outline-none focus:border-accent text-sm font-medium"
+              />
             </div>
           </div>
 
-          {/* Default Margin */}
+          {/* Default Margin Input */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-subtext uppercase">Default Profit Margin</label>
             <div className="relative">
               <Percent className="absolute left-3 top-3 w-5 h-5 text-subtext" />
-              <input type="number" defaultValue="15" className="w-full pl-10 pr-4 py-2.5 bg-bg border border-ui/10 rounded-lg outline-none focus:border-accent text-sm font-medium" />
+              {/* === CHANGE THIS INPUT === */}
+              <input
+                type="number"
+                value={storeConfig.margin}
+                onChange={(e) => setStoreConfig({ ...storeConfig, margin: Number(e.target.value) })}
+                className="w-full pl-10 pr-4 py-2.5 bg-bg border border-ui/10 rounded-lg outline-none focus:border-accent text-sm font-medium"
+              />
             </div>
             <p className="text-xs text-subtext">This % is added to online prices automatically.</p>
           </div>
 
-          {/* Location */}
+          {/* Location Input */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-subtext uppercase">Store Location</label>
             <div className="relative">
               <MapPin className="absolute left-3 top-3 w-5 h-5 text-subtext" />
-              <input type="text" defaultValue="Mumbai, India" className="w-full pl-10 pr-4 py-2.5 bg-bg border border-ui/10 rounded-lg outline-none focus:border-accent text-sm font-medium" />
+              {/* === CHANGE THIS INPUT === */}
+              <input
+                type="text"
+                value={storeConfig.location}
+                onChange={(e) => setStoreConfig({ ...storeConfig, location: e.target.value })}
+                className="w-full pl-10 pr-4 py-2.5 bg-bg border border-ui/10 rounded-lg outline-none focus:border-accent text-sm font-medium"
+              />
             </div>
           </div>
+
+          {/* === OPTIONAL: Add a Save Button === */}
+          <button
+            onClick={() => setActiveModal(null)}
+            className="w-full bg-accent text-white py-2 rounded-lg font-bold hover:bg-accent/90 transition-colors"
+          >
+            Save Changes
+          </button>
+
         </div>
       </Modal>
 
@@ -165,7 +199,10 @@ function App() {
 
       <main className="p-4 md:p-8 max-w-7xl mx-auto">
         {/* PASSED THE FUNCTION DOWN */}
-        <Dashboard onStoreSettings={() => setActiveModal('store-settings')} />
+        <Dashboard
+          storeConfig={storeConfig} // Pass the data down
+          onStoreSettings={() => setActiveModal('store-settings')}
+        />
       </main>
     </div>
   );
